@@ -16,6 +16,7 @@ namespace H264Analyst {
     mFormatCtx(nullptr){
         mSPS = std::make_shared<H264Analyst::sps>();
         mPPS = std::make_shared<H264Analyst::pps>();
+        mVclNalu = std::make_shared<H264Analyst::vcl_nalu>();
     }
     
     void MediaSource::init(){
@@ -98,18 +99,30 @@ namespace H264Analyst {
         return result;
     }
     
-    void MediaSource::dumpParameterSetInfo(){
+    void MediaSource::parseParameterSet(){
         mSPS->parse(mSPSData.data(), mSPSData.size());
-        mSPS->dumpInfo();
         mPPS->parse(mPPSData.data(), mPPSData.size());
+        mVclNalu->sps = mSPS;
+        mVclNalu->pps = mPPS;
+    }
+    
+    void MediaSource::dumpParameterSetInfo(){
+        parseParameterSet();
+        mSPS->dumpInfo();
         mPPS->dumpInfo();
     }
     
     void MediaSource::dumpVclNaluHeaderInfo(){
-        while (av_read_frame(mFormatCtx, mPacket) >= 0){
-            if (mPacket->stream_index == mVideoStreamIndex){
+        while (true){
+            int result = av_read_frame(mFormatCtx, mPacket);
+            if (result >= 0 && mPacket->stream_index == mVideoStreamIndex){
                 extractNaluFromPkt();
                 parseNaluAndDumpInfo();
+            }
+            
+            if (result == AVERROR_EOF || result == AVERROR(EIO)){
+                std::cout << "end of stream.\n";
+                break;
             }
         }
         
@@ -126,11 +139,8 @@ namespace H264Analyst {
                 switch (H264Analyst::getNalType(mPacket->data, item)){
                     case H264Analyst::NalType::NAL_Slice:
                     case H264Analyst::NalType::NAL_IDR_Slice:{
-                        auto nalu = std::make_shared<H264Analyst::vcl_nalu>();
-                        nalu->sps = mSPS;
-                        nalu->pps = mPPS;
-                        nalu->parse(mPacket->data + item - 4, H264Analyst::getNalSize(mPacket->data, item) + 4);
-                        nalu->dumpInfo();
+                        mVclNalu->parse(mPacket->data + item - 4, H264Analyst::getNalSize(mPacket->data, item) + 4);
+                        mVclNalu->dumpInfo();
                         break;
                     }
                     default:

@@ -56,7 +56,7 @@ namespace H264Analyst {
         virtual std::string&& toString() = 0;
     public:
         void dumpInfo();
-        unsigned long getValueForKey(std::string&& key);
+        long getValueForKey(std::string&& key);
     public:
         uint8_t* mData;
         uint32_t mSize;

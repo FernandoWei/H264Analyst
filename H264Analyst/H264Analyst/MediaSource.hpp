@@ -34,6 +34,7 @@ namespace H264Analyst {
         int extractParameterSet();
         void extractNaluFromPkt();
         void parseNaluAndDumpInfo();
+        void parseParameterSet();
  
     private:
         std::string mURL;
@@ -45,6 +46,7 @@ namespace H264Analyst {
         std::vector<uint8_t> mPPSData;
         std::shared_ptr<H264Analyst::sps> mSPS;
         std::shared_ptr<H264Analyst::pps> mPPS;
+        std::shared_ptr<H264Analyst::vcl_nalu> mVclNalu;
         std::vector<unsigned long> mExtractedNalus;
     };
 }

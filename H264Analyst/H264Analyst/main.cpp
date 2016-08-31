@@ -10,7 +10,7 @@
 
 int main(int argc, const char * argv[]) {
     
-//    std::string url = "http://10.11.10.45/ttkankan/video/test_22.flv";
+//    std::string url = "/Users/fernando/Library/Application Support/RTXC/accounts/weihongqiang/sessionPhoto/test.flv";
 //    std::string url = "http://10.11.10.45/ttkankan/video/test3.flv";
     std::string url = "/Users/fernando/Documents/iOS/testVedio/test_22.flv";
     

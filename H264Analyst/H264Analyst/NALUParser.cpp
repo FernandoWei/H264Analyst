@@ -12,8 +12,16 @@
 
 namespace H264Analyst {
     
-#define INVALID_VALUE 999
+#define INVALID_VALUE (-1)
 #define MAX_DUMP_BYTES_NUM 20
+    
+#define GET_VALUE_FOR_KEY(thiz, key, value){ \
+long result = thiz->getValueForKey(key); \
+if (result != -1){ \
+*value = result;} \
+} \
+
+
     
     SliceType getSliceType(int slice_type){
         slice_type %= 5;
@@ -150,7 +158,7 @@ namespace H264Analyst {
         std::cout << std::endl;
     }
     
-    unsigned long h264data::getValueForKey(std::string&& key){
+    long h264data::getValueForKey(std::string&& key){
         std::string destString(key);
         for (auto& item : informations){
             if (item.first.compare(destString) == 0){
@@ -179,7 +187,8 @@ namespace H264Analyst {
         informations.push_back(std::make_pair(std::move(std::string("reserved_zero_4bits")), nal.GetWord(4)));
         informations.push_back(std::make_pair(std::move(std::string("level_idc")), nal.GetWord(8)));
         informations.push_back(std::make_pair(std::move(std::string("seq_parameter_set_id")), nal.GetUE()));
-        unsigned long profile_idc = getValueForKey(std::move(std::string("profile_idc")));
+        unsigned long profile_idc = 0;
+        GET_VALUE_FOR_KEY(this, std::move(std::string("profile_idc")), &profile_idc);
         if (profile_idc == 100 || profile_idc == 110 || profile_idc == 122 || profile_idc == 144){
             informations.push_back(std::make_pair(std::move(std::string("chroma_format_idc")), nal.GetUE()));
             if (informations.back().second == 3){
@@ -202,18 +211,18 @@ namespace H264Analyst {
             informations.push_back(std::make_pair(std::move(std::string("log2_max_pic_order_cnt_lsb_minus4")), nal.GetUE()));
         }else if (pic_order_cnt_type == 1){
             informations.push_back(std::make_pair(std::move(std::string("delta_pic_order_always_zero_flag")), nal.GetBit()));
-            informations.push_back(std::make_pair(std::move(std::string("offset_for_non_ref_pic")), nal.GetSE()));
+            informations.push_back(std::make_pair(std::move(std::string("offset_for_non_ref_pic")), std::abs(nal.GetSE())));
             informations.push_back(std::make_pair(std::move(std::string("offset_for_top_to_bottom_field")), nal.GetSE()));
             informations.push_back(std::make_pair(std::move(std::string("num_ref_frames_in_pic_order_cnt_cycle")), nal.GetUE()));
             unsigned long num_ref_frames_in_pic_order_cnt_cycle = informations.back().second;
             for (int i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++){
-                informations.push_back(std::make_pair(std::move(std::string("offset_for_ref_frames_").append(std::to_string(i))), nal.GetSE()));
+                informations.push_back(std::make_pair(std::move(std::string("offset_for_ref_frames_").append(std::to_string(i))), std::abs(nal.GetSE())));
             }
         }
         informations.push_back(std::make_pair(std::move(std::string("num_ref_frames")), nal.GetUE()));
         informations.push_back(std::make_pair(std::move(std::string("gaps_in_frames_num_value_allowed_flag")), nal.GetBit()));
         informations.push_back(std::make_pair(std::move(std::string("pic_width_in_mbs_minus1")), nal.GetUE()));
-        informations.push_back(std::make_pair(std::move(std::string("pic_height_map_units_minus1")), nal.GetUE()));
+        informations.push_back(std::make_pair(std::move(std::string("pic_height_in_map_units_minus1")), nal.GetUE()));
         informations.push_back(std::make_pair(std::move(std::string("frame_mbs_only_flag")), nal.GetBit()));
         if (!informations.back().second){
             informations.push_back(std::make_pair(std::move(std::string("mb_adaptive_frame_field_flag")), nal.GetBit()));
@@ -276,9 +285,9 @@ namespace H264Analyst {
         informations.push_back(std::make_pair(std::move(std::string("num_ref_idx_l1_active_minus1")), nal.GetUE()));
         informations.push_back(std::make_pair(std::move(std::string("weighted_pred_flag")), nal.GetBit()));
         informations.push_back(std::make_pair(std::move(std::string("weighted_bipred_idc")), nal.GetWord(2)));
-        informations.push_back(std::make_pair(std::move(std::string("pic_init_qp_minus26")), nal.GetSE()));
-        informations.push_back(std::make_pair(std::move(std::string("pic_init_qs_minus26")), nal.GetSE()));
-        informations.push_back(std::make_pair(std::move(std::string("chroma_qp_index_offset")), nal.GetSE()));
+        informations.push_back(std::make_pair(std::move(std::string("pic_init_qp_minus26")), std::abs(nal.GetSE())));
+        informations.push_back(std::make_pair(std::move(std::string("pic_init_qs_minus26")), std::abs(nal.GetSE())));
+        informations.push_back(std::make_pair(std::move(std::string("chroma_qp_index_offset")), std::abs(nal.GetSE())));
         informations.push_back(std::make_pair(std::move(std::string("deblocking_filter_control_present_flag")), nal.GetBit()));
         informations.push_back(std::make_pair(std::move(std::string("constrained_intra_pred_flag")), nal.GetBit()));
         informations.push_back(std::make_pair(std::move(std::string("redundant_pic_cnt_present_flag")), nal.GetBit()));
@@ -311,9 +320,13 @@ namespace H264Analyst {
         informations.push_back(std::make_pair(std::move(std::string("first_mb_in_slice")), nal.GetUE()));
         informations.push_back(std::make_pair(std::move(std::string("slice_type")), nal.GetUE()));
         informations.push_back(std::make_pair(std::move(std::string("pic_parameter_set_id")), nal.GetUE()));
-        informations.push_back(std::make_pair(std::move(std::string("frame_num")), nal.GetWord(sps->getValueForKey(std::move(std::string("log2_max_frame_num_minus4"))) + 4)));
+        unsigned long log2_max_frame_num_minus4 = 0;
+        GET_VALUE_FOR_KEY(sps, std::move(std::string("log2_max_frame_num_minus4")), &log2_max_frame_num_minus4);
+        informations.push_back(std::make_pair(std::move(std::string("frame_num")), nal.GetWord(log2_max_frame_num_minus4 + 4)));
         unsigned long field_pic_flag = 0;
-        if (!sps->getValueForKey(std::move(std::string("frame_mbs_only_flag")))){
+        unsigned long frame_mbs_only_flag = 0;
+        GET_VALUE_FOR_KEY(sps, std::move(std::string("frame_mbs_only_flag")), &frame_mbs_only_flag);
+        if (!frame_mbs_only_flag){
             field_pic_flag = nal.GetBit();
             informations.push_back(std::make_pair(std::move(std::string("field_pic_flag")), field_pic_flag));
             if (informations.back().second){
@@ -323,23 +336,39 @@ namespace H264Analyst {
         if (nal.Type() == NALUnit::NAL_IDR_Slice){
             informations.push_back(std::make_pair(std::move(std::string("idr_pic_id")), nal.GetUE()));
         }
-        if (sps->getValueForKey(std::move(std::string("pic_order_cnt_type"))) == 0){
-            unsigned long maxPicOrderCntLsb = sps->getValueForKey(std::move(std::string("log2_max_pic_order_cnt_lsb_minus4"))) + 4;
+        
+        unsigned long pic_order_cnt_type = 0;
+        GET_VALUE_FOR_KEY(sps, std::move(std::string("pic_order_cnt_type")), &pic_order_cnt_type);
+        unsigned long pic_order_present_flag = 0;
+        GET_VALUE_FOR_KEY(pps, std::move(std::string("pic_order_present_flag")), &pic_order_present_flag);
+        if (pic_order_cnt_type == 0){
+            unsigned long log2_max_pic_order_cnt_lsb_minus4 = 0;
+            GET_VALUE_FOR_KEY(sps, std::move(std::string("log2_max_pic_order_cnt_lsb_minus4")), &log2_max_pic_order_cnt_lsb_minus4);
+            unsigned long maxPicOrderCntLsb = log2_max_pic_order_cnt_lsb_minus4 + 4;
             informations.push_back(std::make_pair(std::move(std::string("pic_order_cnt_lsb")), nal.GetWord(maxPicOrderCntLsb)));
-            if (pps->getValueForKey(std::move(std::string("pic_order_present_flag"))) && !field_pic_flag){
-                informations.push_back(std::make_pair(std::move(std::string("delta_pic_order_cnt_bottom")), nal.GetSE()));
+
+            if (pic_order_present_flag && !field_pic_flag){
+                informations.push_back(std::make_pair(std::move(std::string("delta_pic_order_cnt_bottom")), std::abs(nal.GetSE())));
             }
         }
-        if (sps->getValueForKey(std::move(std::string("pic_order_cnt_type"))) == 1 && !sps->getValueForKey(std::move(std::string("delta_pic_order_always_zero_flag")))){
-            informations.push_back(std::make_pair(std::move(std::string("delta_pic_order_cnt_0")), nal.GetSE()));
-            if (pps->getValueForKey(std::move(std::string("pic_order_present_flag"))) && !field_pic_flag){
-                informations.push_back(std::make_pair(std::move(std::string("delta_pic_order_cnt_1")), nal.GetSE()));
+        unsigned long delta_pic_order_always_zero_flag = 0;
+        GET_VALUE_FOR_KEY(sps, std::move(std::string("delta_pic_order_always_zero_flag")), &delta_pic_order_always_zero_flag);
+        if (pic_order_cnt_type == 1 && !delta_pic_order_always_zero_flag){
+            informations.push_back(std::make_pair(std::move(std::string("delta_pic_order_cnt_0")), std::abs(nal.GetSE())));
+            if (pic_order_present_flag && !field_pic_flag){
+                informations.push_back(std::make_pair(std::move(std::string("delta_pic_order_cnt_1")), std::abs(nal.GetSE())));
             }
         }
-        if (pps->getValueForKey(std::move(std::string("redundant_pic_cnt_present_flag")))){
+        
+        unsigned long redundant_pic_cnt_present_flag = 0;
+        GET_VALUE_FOR_KEY(pps, std::move(std::string("redundant_pic_cnt_present_flag")), &redundant_pic_cnt_present_flag);
+        if (redundant_pic_cnt_present_flag){
             informations.push_back(std::make_pair(std::move(std::string("redundant_pic_cnt")), nal.GetUE()));
         }
-        H264Analyst::SliceType sliceType = H264Analyst::getSliceType(getValueForKey(std::move(std::string("slice_type"))));
+        
+        unsigned long slice_type = 0;
+        GET_VALUE_FOR_KEY(this, std::move(std::string("slice_type")), &slice_type);
+        H264Analyst::SliceType sliceType = H264Analyst::getSliceType(slice_type);
         if (sliceType == H264Analyst::SliceType::B_Slice){
             informations.push_back(std::make_pair(std::move(std::string("direct_spatial_mv_pred_flag")), nal.GetBit()));
         }
@@ -355,28 +384,43 @@ namespace H264Analyst {
                 }
             }
         }
-        if (pps->getValueForKey(std::move(std::string("entropy_coding_mode_flag"))) && sliceType != H264Analyst::SliceType::I_Slice && sliceType != H264Analyst::SliceType::SI_Slice){
+        
+        unsigned long entropy_coding_mode_flag = 0;
+        GET_VALUE_FOR_KEY(pps, std::move(std::string("entropy_coding_mode_flag")), &entropy_coding_mode_flag);
+        if (entropy_coding_mode_flag && sliceType != H264Analyst::SliceType::I_Slice && sliceType != H264Analyst::SliceType::SI_Slice){
             informations.push_back(std::make_pair(std::move(std::string("cabac_init_idc")), nal.GetUE()));
         }
-        informations.push_back(std::make_pair(std::move(std::string("slice_qp_delta")), nal.GetSE()));
+        informations.push_back(std::make_pair(std::move(std::string("slice_qp_delta")), std::abs(nal.GetSE())));
         if (sliceType == H264Analyst::SliceType::SP_Slice || sliceType == H264Analyst::SliceType::SI_Slice){
             if (sliceType == H264Analyst::SliceType::SP_Slice){
                 informations.push_back(std::make_pair(std::move(std::string("sp_for_switch_flag")), nal.GetBit()));
-                informations.push_back(std::make_pair(std::move(std::string("slice_qs_delta")), nal.GetSE()));
+                informations.push_back(std::make_pair(std::move(std::string("slice_qs_delta")), std::abs(nal.GetSE())));
             }
-            if (pps->getValueForKey(std::move(std::string("deblocking_filter_control_present_flag")))){
+            
+            unsigned long deblocking_filter_control_present_flag = 0;
+            GET_VALUE_FOR_KEY(pps, std::move(std::string("deblocking_filter_control_present_flag")), &deblocking_filter_control_present_flag);
+            if (deblocking_filter_control_present_flag){
                 unsigned long disable_deblocking_filter_idc = nal.GetUE();
                 informations.push_back(std::make_pair(std::move(std::string("disable_deblocking_filter_idc")), disable_deblocking_filter_idc));
                 if (disable_deblocking_filter_idc != 1){
-                    informations.push_back(std::make_pair(std::move(std::string("slice_alpha_c0_offset_div2")), nal.GetSE()));
-                    informations.push_back(std::make_pair(std::move(std::string("slice_beta_offset_div2")), nal.GetSE()));
+                    informations.push_back(std::make_pair(std::move(std::string("slice_alpha_c0_offset_div2")), std::abs(nal.GetSE())));
+                    informations.push_back(std::make_pair(std::move(std::string("slice_beta_offset_div2")), std::abs(nal.GetSE())));
                 }
             }
-            if (pps->getValueForKey(std::move(std::string("num_slice_groups_mimus1"))) > 0 &&
-                pps->getValueForKey(std::move(std::string("slice_group_map_type"))) >= 3 &&
-                pps->getValueForKey(std::move(std::string("slice_group_map_type"))) <= 5){
-                unsigned long picSizeInMapUnits = (sps->getValueForKey(std::move(std::string("pic_width_in_mbs_minus1"))) + 1) * (sps->getValueForKey(std::move(std::string("pic_width_in_mbs_minus1"))) + 1);
-                unsigned long sliceGroupChangeRate = pps->getValueForKey(std::move(std::string("slice_group_change_rate_minus1"))) + 1;
+            
+            unsigned long num_slice_groups_mimus1 = 0;
+            unsigned long slice_group_map_type = 0;
+            GET_VALUE_FOR_KEY(pps, std::move(std::string("num_slice_groups_mimus1")), &num_slice_groups_mimus1);
+            GET_VALUE_FOR_KEY(pps, std::move(std::string("slice_group_map_type")), &slice_group_map_type);
+            if (num_slice_groups_mimus1 > 0 && slice_group_map_type >= 3 && slice_group_map_type <= 5){
+                unsigned long pic_width_in_mbs_minus1 = 0;
+                unsigned long pic_height_in_map_units_minus1 = 0;
+                GET_VALUE_FOR_KEY(sps, std::move(std::string("pic_width_in_mbs_minus1")), &pic_width_in_mbs_minus1);
+                GET_VALUE_FOR_KEY(sps, std::move(std::string("pic_height_in_map_units_minus1")), &pic_height_in_map_units_minus1);
+                unsigned long picSizeInMapUnits = (pic_width_in_mbs_minus1 + 1) * (pic_height_in_map_units_minus1 + 1);
+                unsigned long slice_group_change_rate_minus1 = 0;
+                GET_VALUE_FOR_KEY(pps, std::move(std::string("slice_group_change_rate_minus1")), &slice_group_change_rate_minus1);
+                unsigned long sliceGroupChangeRate = slice_group_change_rate_minus1 + 1;
                 informations.push_back(std::make_pair(std::move(std::string("slice_group_change_cycle")), nal.GetWord(std::ceil(std::log2(picSizeInMapUnits/sliceGroupChangeRate + 1)))));
             }
         }
