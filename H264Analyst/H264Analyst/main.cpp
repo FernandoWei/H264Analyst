@@ -10,8 +10,9 @@
 
 int main(int argc, const char * argv[]) {
     
-    std::string url = "http://10.11.10.45/ttkankan/video/test_22.flv";
+//    std::string url = "http://10.11.10.45/ttkankan/video/test_22.flv";
 //    std::string url = "http://10.11.10.45/ttkankan/video/test3.flv";
+    std::string url = "/Users/fernando/Documents/iOS/testVedio/test_22.flv";
     
     std::unique_ptr<H264Analyst::MediaSource, std::function<void(H264Analyst::MediaSource* source)> > mediaSource(new H264Analyst::MediaSource(std::move(url)), [](H264Analyst::MediaSource* source){
         return source->close();

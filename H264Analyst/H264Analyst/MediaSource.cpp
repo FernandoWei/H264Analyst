@@ -107,18 +107,17 @@ namespace H264Analyst {
     
     void MediaSource::dumpVclNaluHeaderInfo(){
         while (av_read_frame(mFormatCtx, mPacket) >= 0){
-            extractNaluFromPkt();
-            parseNaluAndDumpInfo();
+            if (mPacket->stream_index == mVideoStreamIndex){
+                extractNaluFromPkt();
+                parseNaluAndDumpInfo();
+            }
         }
         
     }
     
     void MediaSource::extractNaluFromPkt(){
-        if (mPacket->stream_index == mVideoStreamIndex){
             mExtractedNalus.clear();
             H264Analyst::parsePkt(mPacket, mExtractedNalus);
-            
-        }
     }
     
     void MediaSource::parseNaluAndDumpInfo(){
