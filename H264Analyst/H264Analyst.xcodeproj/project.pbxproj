@@ -18,6 +18,11 @@
 		ED0CCC2F1D6FE9F6009A5225 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED0CCC281D6FE9F6009A5225 /* libswresample.a */; };
 		ED0CCC301D6FE9F6009A5225 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED0CCC291D6FE9F6009A5225 /* libswscale.a */; };
 		ED0CCC4E1D767DBF009A5225 /* MediaSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED0CCC4C1D767DBF009A5225 /* MediaSource.cpp */; };
+		ED1FF3A71D895A7300E194D9 /* libbz2.1.0.5.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1FF3A61D895A7300E194D9 /* libbz2.1.0.5.tbd */; };
+		ED1FF3A91D895A7B00E194D9 /* libiconv.2.4.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1FF3A81D895A7B00E194D9 /* libiconv.2.4.0.tbd */; };
+		ED1FF3BC1D8E77BC00E194D9 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1FF3BB1D8E77BC00E194D9 /* Security.framework */; };
+		ED1FF3BE1D8E77DD00E194D9 /* libz.1.1.3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1FF3BD1D8E77DD00E194D9 /* libz.1.1.3.tbd */; };
+		ED1FF3C21D8E77FC00E194D9 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ED1FF3C11D8E77FC00E194D9 /* CoreFoundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -151,6 +156,12 @@
 		ED0CCC291D6FE9F6009A5225 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libswscale.a; sourceTree = "<group>"; };
 		ED0CCC4C1D767DBF009A5225 /* MediaSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MediaSource.cpp; sourceTree = "<group>"; };
 		ED0CCC4D1D767DBF009A5225 /* MediaSource.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = MediaSource.hpp; sourceTree = "<group>"; };
+		ED1FF3A61D895A7300E194D9 /* libbz2.1.0.5.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.1.0.5.tbd; path = usr/lib/libbz2.1.0.5.tbd; sourceTree = SDKROOT; };
+		ED1FF3A81D895A7B00E194D9 /* libiconv.2.4.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.2.4.0.tbd; path = usr/lib/libiconv.2.4.0.tbd; sourceTree = SDKROOT; };
+		ED1FF3BB1D8E77BC00E194D9 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		ED1FF3BD1D8E77DD00E194D9 /* libz.1.1.3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.1.1.3.tbd; path = usr/lib/libz.1.1.3.tbd; sourceTree = SDKROOT; };
+		ED1FF3BF1D8E77ED00E194D9 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		ED1FF3C11D8E77FC00E194D9 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		EDF07CB41D0ED72900E5C5CB /* H264Analyst */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = H264Analyst; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -159,6 +170,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ED1FF3C21D8E77FC00E194D9 /* CoreFoundation.framework in Frameworks */,
+				ED1FF3BE1D8E77DD00E194D9 /* libz.1.1.3.tbd in Frameworks */,
+				ED1FF3BC1D8E77BC00E194D9 /* Security.framework in Frameworks */,
+				ED1FF3A91D895A7B00E194D9 /* libiconv.2.4.0.tbd in Frameworks */,
+				ED1FF3A71D895A7300E194D9 /* libbz2.1.0.5.tbd in Frameworks */,
 				ED0CCC2E1D6FE9F6009A5225 /* libavutil.a in Frameworks */,
 				ED0CCC301D6FE9F6009A5225 /* libswscale.a in Frameworks */,
 				ED0CCC2C1D6FE9F6009A5225 /* libavfilter.a in Frameworks */,
@@ -378,6 +394,12 @@
 		EDF07CAB1D0ED72900E5C5CB = {
 			isa = PBXGroup;
 			children = (
+				ED1FF3C11D8E77FC00E194D9 /* CoreFoundation.framework */,
+				ED1FF3BF1D8E77ED00E194D9 /* CoreMedia.framework */,
+				ED1FF3BD1D8E77DD00E194D9 /* libz.1.1.3.tbd */,
+				ED1FF3BB1D8E77BC00E194D9 /* Security.framework */,
+				ED1FF3A81D895A7B00E194D9 /* libiconv.2.4.0.tbd */,
+				ED1FF3A61D895A7300E194D9 /* libbz2.1.0.5.tbd */,
 				ED0CCC221D6FE9F6009A5225 /* 3rdlib */,
 				ED0CCBB11D6FE9E9009A5225 /* include */,
 				ED0CCBA81D6FE995009A5225 /* H264Analyst */,
@@ -556,12 +578,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)",
 					"$(inherited)",
+					"$(PROJECT_DIR)",
 				);
 				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
 					"$(PROJECT_DIR)",
-					/usr/local/Cellar/ffmpeg/3.0/lib,
 					"$(PROJECT_DIR)/3rdlib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -572,12 +594,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)",
 					"$(inherited)",
+					"$(PROJECT_DIR)",
 				);
 				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
 					"$(PROJECT_DIR)",
-					/usr/local/Cellar/ffmpeg/3.0/lib,
 					"$(PROJECT_DIR)/3rdlib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";

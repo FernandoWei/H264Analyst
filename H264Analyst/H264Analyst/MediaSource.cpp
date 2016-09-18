@@ -64,10 +64,15 @@ namespace H264Analyst {
         int result = -1;
         if (mCodecCtx && mCodecCtx->extradata){
             if (mCodecCtx->extradata[0] == 0x01){
+                std::cout << "Extradata:";
+                for (int i = 0; i < mCodecCtx->extradata_size; i++){
+                    printf("%02x ", mCodecCtx->extradata[i]);
+                }
+                std::cout << "\n";
                 AVBitStreamFilterContext* bsfc = av_bitstream_filter_init("h264_mp4toannexb");
                 uint8_t *dummy = nullptr;
                 int dummy_len = -1;
-                av_bitstream_filter_filter(bsfc, mCodecCtx, nullptr, &dummy, &dummy_len, nullptr, 0, 0);
+                av_bitstream_filter_filter(bsfc, mCodecCtx, nullptr, &dummy, &dummy_len, mCodecCtx->extradata, 0, 0);
                 uint8_t* data_sps_pps = mCodecCtx->extradata;
                 int size_sps_pps = mCodecCtx->extradata_size;
                 const std::array<uint8_t, 4> KStartCode{0, 0, 0, 1};
