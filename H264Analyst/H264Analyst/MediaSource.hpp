@@ -10,9 +10,6 @@
 #define MediaSource_hpp
 
 #include "NALUParser.h"
-#include <iostream>
-#include <vector>
-#include <array>
 
 namespace H264Analyst {
     
@@ -23,15 +20,15 @@ namespace H264Analyst {
         MediaSource(std::string&& url);
         
     public:
-        int prepareSource();
+        ResultType prepareSource();
         void close();
         void dumpParameterSetInfo();
         void dumpVclNaluHeaderInfo();
         
     private:
         void init();
-        int open();
-        int extractParameterSet();
+        ResultType open();
+        ResultType extractParameterSet();
         void extractNaluFromPkt();
         void parseNaluAndDumpInfo();
         void parseParameterSet();
@@ -41,13 +38,13 @@ namespace H264Analyst {
         AVCodecContext* mCodecCtx;
         AVFormatContext* mFormatCtx;
         int mVideoStreamIndex;
-        AVPacket* mPacket;
         std::vector<uint8_t> mSPSData;
         std::vector<uint8_t> mPPSData;
         std::shared_ptr<H264Analyst::sps> mSPS;
         std::shared_ptr<H264Analyst::pps> mPPS;
         std::shared_ptr<H264Analyst::vcl_nalu> mVclNalu;
         std::vector<unsigned long> mExtractedNalus;
+        AVPacket mPacket;
     };
 }
 

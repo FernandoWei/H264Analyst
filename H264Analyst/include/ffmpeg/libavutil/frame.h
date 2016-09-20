@@ -385,7 +385,6 @@ typedef struct AVFrame {
 
 /**
  * @defgroup lavu_frame_flags AV_FRAME_FLAGS
- * @ingroup lavu_frame
  * Flags describing additional frame properties.
  *
  * @{
@@ -427,6 +426,12 @@ typedef struct AVFrame {
     enum AVColorSpace colorspace;
 
     enum AVChromaLocation chroma_location;
+
+    /**
+     * For hwaccel-format frames, this should be a reference to the
+     * AVHWFramesContext describing the frame.
+     */
+    AVBufferRef *hw_frames_ctx;
 
     /**
      * frame timestamp estimated using various heuristics, in stream time base
@@ -519,11 +524,6 @@ typedef struct AVFrame {
      */
     AVBufferRef *qp_table_buf;
 #endif
-    /**
-     * For hwaccel-format frames, this should be a reference to the
-     * AVHWFramesContext describing the frame.
-     */
-    AVBufferRef *hw_frames_ctx;
 } AVFrame;
 
 /**

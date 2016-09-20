@@ -8,10 +8,12 @@
 
 #include "MediaSource.hpp"
 
+#define START_CODE_LENGTH 4
+#define INVALID_VIDEO_STREAM_INDEX (-1)
+
 namespace H264Analyst {
     MediaSource::MediaSource(std::string&& url):
     mURL(url),
-    mPacket(nullptr),
     mCodecCtx(nullptr),
     mFormatCtx(nullptr){
         mSPS = std::make_shared<H264Analyst::sps>();
@@ -23,19 +25,19 @@ namespace H264Analyst {
         av_register_all();
         avformat_network_init();
         mFormatCtx = avformat_alloc_context();
-        mPacket = av_packet_alloc();
+        av_init_packet(&mPacket);
     }
     
-    int MediaSource::prepareSource(){
+    ResultType MediaSource::prepareSource(){
         init();
-        int result = open();
-        if (result == 0){
+        ResultType result = ResultType::ERROR;
+        if (ResultType::OK == open()){
             result = extractParameterSet();
         }
         return result;
     }
     
-    int MediaSource::open(){
+    ResultType MediaSource::open(){
         if (avformat_open_input(&mFormatCtx, mURL.c_str(), nullptr, nullptr) == 0){
             if (avformat_find_stream_info(mFormatCtx, nullptr) >= 0){
                 for (int i = 0; i < mFormatCtx->nb_streams; i++){
@@ -45,59 +47,33 @@ namespace H264Analyst {
                     }
                 }
                 
-                if (-1 == mVideoStreamIndex){
+                if (INVALID_VIDEO_STREAM_INDEX == mVideoStreamIndex){
                     std::cout << "failed to find video stream!\n";
-                    return -1;
+                    return ResultType::ERROR;
                 }
                 
                 mCodecCtx = mFormatCtx->streams[mVideoStreamIndex]->codec;
                 if (mCodecCtx->codec_id != AV_CODEC_ID_H264){
                     std::cout << "It's not H264 coded video.\n";
-                    return -1;
+                    return ResultType::ERROR;
                 }
             }
         }
-        return 0;
+        return ResultType::OK;
     }
     
-    int MediaSource::extractParameterSet(){
-        int result = -1;
-        if (mCodecCtx && mCodecCtx->extradata){
-            if (mCodecCtx->extradata[0] == 0x01){
-                std::cout << "Extradata:";
-                for (int i = 0; i < mCodecCtx->extradata_size; i++){
-                    printf("%02x ", mCodecCtx->extradata[i]);
-                }
-                std::cout << "\n";
-                AVBitStreamFilterContext* bsfc = av_bitstream_filter_init("h264_mp4toannexb");
-                uint8_t *dummy = nullptr;
-                int dummy_len = -1;
-                av_bitstream_filter_filter(bsfc, mCodecCtx, nullptr, &dummy, &dummy_len, mCodecCtx->extradata, 0, 0);
-                uint8_t* data_sps_pps = mCodecCtx->extradata;
-                int size_sps_pps = mCodecCtx->extradata_size;
-                const std::array<uint8_t, 4> KStartCode{0, 0, 0, 1};
-                if(memcmp(data_sps_pps, KStartCode.data(), 4) == 0){
-                    uint8_t* buffBegin = data_sps_pps + 4;
-                    uint8_t* buffEnd = data_sps_pps + size_sps_pps - 1;
-                    while (buffBegin != buffEnd){
-                        if(*buffBegin == 0x01){
-                            if(memcmp(buffBegin - 3, KStartCode.data(), 4) == 0){
-                                mSPSData.resize(buffBegin - 3 - data_sps_pps - 4);
-                                memcpy(mSPSData.data(), data_sps_pps + 4, buffBegin - 3 - data_sps_pps - 4);
-                                break;
-                            }
-                        }
-                        ++buffBegin;
-                    }
-                    mPPSData.resize(buffEnd - buffBegin);
-                    memcpy(mPPSData.data(), buffBegin + 1, buffEnd - buffBegin);
-                }
-                free(dummy);
-                av_bitstream_filter_close(bsfc);
-                result = 0;
-            }else {
-                std::cout << "Not avcC sequence header contained in codec->extradata.\n";
-            }
+    ResultType MediaSource::extractParameterSet(){
+        ResultType result = ResultType::ERROR;
+        if (mCodecCtx && mCodecCtx->extradata && mCodecCtx->extradata[0] == 0x01 && mCodecCtx->extradata_size > 8){
+            uint8_t spsOffsetIndex = 8;
+            uint8_t spsLength = mCodecCtx->extradata[spsOffsetIndex - 1];
+            mSPSData.resize(spsLength);
+            memcpy(mSPSData.data(), &mCodecCtx->extradata[spsOffsetIndex], spsLength);
+            uint8_t ppsOffsetIndex = spsOffsetIndex + spsLength + 3;
+            uint8_t ppsLength = mCodecCtx->extradata[ppsOffsetIndex - 1];
+            mPPSData.resize(ppsLength);
+            memcpy(mPPSData.data(), &mCodecCtx->extradata[ppsOffsetIndex], ppsLength);
+            result = ResultType::OK;
         }else{
             std::cout << "invalid codecCtx or codecCtx->extradata.\n";
         }
@@ -119,11 +95,12 @@ namespace H264Analyst {
     
     void MediaSource::dumpVclNaluHeaderInfo(){
         while (true){
-            int result = av_read_frame(mFormatCtx, mPacket);
-            if (result >= 0 && mPacket->stream_index == mVideoStreamIndex){
+            int result = av_read_frame(mFormatCtx, &mPacket);
+            if (result == 0 && mPacket.stream_index == mVideoStreamIndex){
                 extractNaluFromPkt();
                 parseNaluAndDumpInfo();
             }
+            av_packet_unref(&mPacket);
             
             if (result == AVERROR_EOF || result == AVERROR(EIO)){
                 std::cout << "end of stream.\n";
@@ -135,16 +112,16 @@ namespace H264Analyst {
     
     void MediaSource::extractNaluFromPkt(){
             mExtractedNalus.clear();
-            H264Analyst::parsePkt(mPacket, mExtractedNalus);
+            H264Analyst::parsePkt(&mPacket, mExtractedNalus);
     }
     
     void MediaSource::parseNaluAndDumpInfo(){
         if (!mExtractedNalus.empty()){
             for (auto& item : mExtractedNalus){
-                switch (H264Analyst::getNalType(mPacket->data, item)){
+                switch (H264Analyst::getNalType(mPacket.data, item)){
                     case H264Analyst::NalType::NAL_Slice:
                     case H264Analyst::NalType::NAL_IDR_Slice:{
-                        mVclNalu->parse(mPacket->data + item - 4, H264Analyst::getNalSize(mPacket->data, item) + 4);
+                        mVclNalu->parse(mPacket.data + item - START_CODE_LENGTH, H264Analyst::getNalSize(mPacket.data, item) + START_CODE_LENGTH);
                         mVclNalu->dumpInfo();
                         break;
                     }
@@ -161,9 +138,6 @@ namespace H264Analyst {
         }
         if (mFormatCtx){
             avformat_close_input(&mFormatCtx);
-        }
-        if (mPacket){
-            av_packet_unref(mPacket);
         }
     }
 }
